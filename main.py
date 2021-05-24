@@ -2,9 +2,7 @@ import random
 import math
 import time
 import numpy as np
-import os
 import tensorflow as tf
-from tensorflow import keras
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import clone_model
@@ -530,6 +528,7 @@ class Cube2x2:
         actions = ['F', 'Fp', 'L', 'Lp', 'R', 'Rp', 'U', 'Up', 'D', 'Dp', 'B', 'Bp']
 
         while True:
+
             print('Running A* Search')
             lowest_cost = 10000
             lowest_cost_node = None
@@ -542,7 +541,7 @@ class Cube2x2:
                     lowest_cost_node = node
 
             if Cube2x2(lowest_cost_node.state).isSolved():
-                return lowest_cost_node.move_sequence
+                return prune(lowest_cost_node.move_sequence)
 
             open.remove(lowest_cost_node)
             closed.append(lowest_cost_node)
@@ -551,6 +550,7 @@ class Cube2x2:
                 child = Cube2x2(lowest_cost_node.state.copy())
                 child.move(a)
                 heuristic = None
+
                 if child.isSolved():
                     heuristic = 0
                 else:
@@ -765,6 +765,7 @@ def DAVI(minutes, model=None):
 
         iterations += 1
         cube = Cube2x2()
+
         for i in range(random.randint(1, 14)):
             cube.move(actions[random.randint(0, 11)])
 
@@ -773,12 +774,14 @@ def DAVI(minutes, model=None):
             temp_cube = Cube2x2(cube.state.copy())
             temp_cube.move(a)
             cost_to_go = None
+
             if temp_cube.isSolved():
                 cost_to_go = 0
             else:
                 cost_to_go = estimation_model.predict(np.array([encodeOneHot(temp_cube.state)]))[0][0]
 
             temp_value = 1 + cost_to_go
+
             if temp_value < minimum:
                 minimum = temp_value
 
@@ -798,6 +801,7 @@ def prune(sequence):
         if sequence[i] == sequence[i+1] and sequence[i] == sequence[i+2] and sequence[i] == sequence[i+3]:
             for j in range(4):
                 sequence.pop(i)
+            print('Pruned 4 moves')
         else:
             i += 1
 
@@ -813,6 +817,7 @@ def prune(sequence):
                 sequence.pop(i)
 
             sequence.insert(i, replacement)
+            print('Replaced 3 moves')
         i += 1
 
     i = 0
@@ -820,6 +825,7 @@ def prune(sequence):
         if len(sequence[i]) != len(sequence[i+1]) and sequence[i][0] == sequence[i+1][0]:
             for j in range(2):
                 sequence.pop(i)
+                print('Pruned 2 moves')
         else:
             i += 1
 
@@ -862,10 +868,9 @@ def train():
 
     start = time.time()
 
-    print('\n--------AUTODIDACTIC ITERATION--------\n')
-    model = ADI(620)
-    model.save('model_620min')
+    model = DAVI(1440)
+    model.save('model_24hrs')
 
     print((time.time() - start), 'seconds')
 
-test()
+train()
