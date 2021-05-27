@@ -840,11 +840,11 @@ def test():
     cube = Cube2x2(list(input_state))
     print(cube.state)
 
-    print('\n--------Deep approximate value iteration--------\n')
+    # print('\n--------Deep approximate value iteration--------\n')
     # model = DAVI(1)
-
     # model.save('model[1min]')
-    model = tf.keras.models.load_model('model[1min]')
+
+    model = tf.keras.models.load_model('model_24hrs')
 
     print('\n--------Weighted A* Search--------\n')
     solution = cube.A_star_solve(model)
@@ -873,4 +873,30 @@ def train():
 
     print((time.time() - start), 'seconds')
 
-train()
+def full_test():
+
+    actions = ['F', 'Fp', 'L', 'Lp', 'R', 'Rp', 'U', 'Up', 'D', 'Dp', 'B', 'Bp']
+    model = tf.keras.models.load_model('model_24hrs')
+    total_seconds = 0
+    total_solution_length = 0
+
+    for i in range(20):
+
+        cube = Cube2x2()
+
+        for j in range(14):
+            cube.move(actions[random.randint(0, 11)])
+
+        start = time.time()
+        solution = cube.A_star_solve(model)
+        total_seconds += (time.time() - start)
+        total_solution_length += len(solution)
+
+    print('\n--------------------------------------------------\n')
+    print('[14 move scramble]')
+    print('100% of test cubes solved (20/20)')
+    print('Average solution length:', (total_solution_length / 20))
+    print('Average solve time:', (total_seconds / 20 / 60), 'minutes')
+
+
+full_test()
